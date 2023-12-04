@@ -1,7 +1,32 @@
 import os
 import sys
+import time
+
+import cv2
 
 from PIL import Image
+from art import *
+
+png_ready = os.path.normpath(os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop') + r"\PNG CONVERTOR")
+os.makedirs(png_ready, exist_ok=True)
+
+
+def convertVideo(path):
+    print("Converting Video")
+    video = cv2.VideoCapture(path)
+    success, frame = video.read()
+    frame_count = 0
+    savePath = png_ready + rf"\{os.path.basename(path)}"
+    print(savePath)
+    os.makedirs(savePath, exist_ok=True)
+    while success:
+        print("saving %s frame %d" % (path, frame_count))
+        cv2.imwrite(savePath + rf"\{frame_count}.png", frame)
+        success, frame = video.read()
+        frame_count += 1
+    tprint("DONE!")
+    time.sleep(1)
+    video.release()
 
 
 def analyseImage(path):
@@ -30,7 +55,8 @@ def analyseImage(path):
     return results
 
 
-def processImage(path):
+def convertGif(path):
+    print("Converting Gif")
     """
     Iterate the GIF, extracting each frame.
     """
@@ -61,23 +87,30 @@ def processImage(path):
 
             new_frame.paste(im, (0, 0), im.convert('RGBA'))
 
-            png_ready = os.path.normpath(os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop') + r"\%s" % (
-                ''.join(os.path.basename(path).split('.')[:-1])))
-            print(png_ready)
+            savePath = png_ready + r"\%s" % (''.join(os.path.basename(path).split('.')[:-1]))
+            print(savePath)
             os.makedirs(png_ready, exist_ok=True)
-            new_frame.save(png_ready + '\%s-%d.png' % (''.join(os.path.basename(path).split('.')[:-1]), i), 'PNG')
+            new_frame.save(savePath + r'\%s-%d.png' % (''.join(os.path.basename(path).split('.')[:-1]), i), 'PNG')
 
             i += 1
             last_frame = new_frame
             im.seek(im.tell() + 1)
     except EOFError:
         pass
+    finally:
+        tprint("DONE!")
+        input()
 
 
 def main():
     path = sys.argv[1]
-    print(path)
-    processImage(path)
+    if path.endswith('.gif'):
+        convertGif(path)
+    elif path.endswith('.mp4'):
+        convertVideo(path)
+    else:
+        tprint("EBLAN?")
+        time.sleep(1)
 
 
 if __name__ == "__main__":
